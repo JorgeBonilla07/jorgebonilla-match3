@@ -1,0 +1,2 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(349,5): error MSB3501: No se pudieron leer las líneas del archivo "PROYECTO.3e1bc9c7\x64\Debug\PROYECTO.3e1bc9c7.tlog\PROYECTO_JORGE_BONILLA.lastbuildstate". The cloud file provider is not running.
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(349,5): error MSB3501: 
