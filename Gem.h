@@ -3,10 +3,11 @@
 using namespace sf;
 
 class Gem {
-private:
+
+protected:
     int gemType;
     Sprite sprite;
-    static Texture gemTextures[5];
+    static Texture gemTextures[6];
     float visualY;
     float visualX;
     float startY;
@@ -18,18 +19,21 @@ private:
     bool animating;
 
 public:
-    Gem();
-    void setGem();
-    void setGemType(int newGemType);
-    int getGemType();
-    void setPosition(float xPosition, float yPosition);
-    void draw(RenderWindow& window);
+
+    virtual void setGem() = 0;
+    virtual void setGemType(int newGemType) = 0;
+    virtual int getGemType() = 0;
+    virtual void setPosition(float xPosition, float yPosition) = 0;
+    virtual void draw(RenderWindow& window) = 0;
+
+    virtual void setVisualY(float newVisualY) {}
+    virtual void setVisualX(float newVisualX) {}
+    virtual float getVisualY() const { return 0.0f; }
+    virtual float getVisualX() const { return 0.0f; }
+    virtual void animateGemMovement(float, float, float, float, float) {}
+    virtual bool updatePosition(float) { return false; }
+    virtual bool isAnimating() const { return false; }
+    virtual void stopAnimation() {}
+
     static void loadTextures();
-    void setVisualY(float newVisualY);
-	void setVisualX(float newVisualX);
-    float getVisualY();
-    void animateGemMovement(float startXPosition, float startYPosition, float endXPosition, float endYPosition, float animationDuration);
-    bool updatePosition(float frameElapsed);
-    bool isAnimating();
-    void stopAnimation();
 };
