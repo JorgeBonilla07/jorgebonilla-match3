@@ -69,7 +69,7 @@ bool Ranking::saveToFile()
     }
 
     for (int i = 0; i < count;i++) {        
-        outputFile << players[i].getName() << '/' << players[i].getScore() <<endl;
+        outputFile << players[i].getName() << ':' << players[i].getScore() <<endl;
     }
 
     outputFile.close();
@@ -95,7 +95,7 @@ bool Ranking::loadFromFile()
             continue;
         }
 
-        size_t markerPosition = lineText.rfind('/');
+        size_t markerPosition = lineText.rfind(':');
 
         if (markerPosition == string::npos) {
             continue;
