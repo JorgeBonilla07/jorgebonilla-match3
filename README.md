@@ -21,15 +21,15 @@ Creado en *Visual Studio 2022*.
 
 1.Oprima el boton "Code" verde
 
-![Botón "Code" para clonar el repositorio desde GitHub](instrucciones/botonCode.png)
+![Botón "Code" para clonar el repositorio desde GitHub](Instrucciones/botonCode.png)
 
 2.Seguidamente seleccione la opcion "Abrir con Visual Studio"
 
-![Seleccionar "Abrir con Visual Studio"](instrucciones/abrirConVS.png)
+![Seleccionar "Abrir con Visual Studio"](Instrucciones/abrirConVS.png)
 
 3.Seguidamente se abrira Visual Studio en su computador con el enlace del repositorio listo, luego de esto, tendra que seleccionar la ubicacion en la que desea instalar el repositorio
 
-![Seleccionar ruta de instalacion"](instrucciones/seleccionarRuta.png)
+![Seleccionar ruta de instalacion"](Instrucciones/seleccionarRuta.png)
 
 4.Visual Studio abrirá automáticamente la solución (`.sln`). 
 
@@ -40,7 +40,7 @@ Creado en *Visual Studio 2022*.
 ### 🔹 Opción 2 — Instalar manualmente
 1. Descarga el repositorio como `.zip` desde GitHub. 
 
-![Botón "Code" para clonar el repositorio desde GitHub](instrucciones/descargarZip.png)
+![Botón "Code" para clonar el repositorio desde GitHub](Instrucciones/descagarZip.png)
 
 2. Extrae los archivos.  
 3. Abre el archivo `PROYECTO_JORGE_BONILLA.sln` con Visual Studio 2022.  
