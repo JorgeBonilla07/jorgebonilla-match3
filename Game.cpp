@@ -3,11 +3,13 @@
 #include "Gem.h"
 #include "NormalGem.h"
 #include "IceGem.h"
+#include "Player.h"
+#include "Ranking.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 using namespace std;
 
-void Game::animateAndRedraw(Board& board, Sprite& scoreIconSprite, Text& scoreText, Text& movesText, Sprite& levelBoxSprite, Text& levelText, Text& challengeDescription, Text& challengeProgressText, Sprite& challengeBoxSprite)
+void Game::animateAndRedraw(Sprite& levelBottonSprite, Board& board, Sprite& scoreIconSprite, Text& scoreText, Text& movesText, Sprite& levelBoxSprite, Text& levelText, Text& challengeDescription, Text& challengeProgressText, Sprite& challengeBoxSprite)
 {
     Clock clock;
     while (board.updateFallingGems(clock.restart().asSeconds())) {
@@ -15,6 +17,7 @@ void Game::animateAndRedraw(Board& board, Sprite& scoreIconSprite, Text& scoreTe
         window->clear();
         window->draw(backgroundSprite);
         board.drawInBoard(*window);
+        window->draw(levelBottonSprite);
         window->draw(scoreIconSprite);
         window->draw(scoreText);
         window->draw(movesText);
@@ -29,9 +32,12 @@ void Game::animateAndRedraw(Board& board, Sprite& scoreIconSprite, Text& scoreTe
 
 Game::Game() : currentLevel(0), window(nullptr), event() {
 
+    Gem::loadTextures();
+
     levels[0] = Level(ObjectiveType::ReachScore, 1000, "Alcanza 1000 puntos.");
     levels[1] = Level(ObjectiveType::DestroyIceBlocks, 2, "Destrue 2\nbloques de hielo.");
     levels[2] = Level(ObjectiveType::RemoveColorGems, 20, "Elimina 20\ngemas rosas.", 0);
+    ranking.loadFromFile();
 }
 
 Game::~Game() {
@@ -112,6 +118,19 @@ void Game::firstWindow() {
     titleSprite.setScale(0.8f, 0.8f);
 
 
+    Texture rankingTexture;
+    Sprite rankingSprite;
+
+    if (!rankingTexture.loadFromFile("assets/rankingBotton.png")) {
+
+        cout << "ERROR AL CARGAR LA IMAGEN DE RANKING" << endl;
+    }
+
+    rankingSprite.setTexture(rankingTexture);
+    rankingSprite.setPosition(660, 17);
+    rankingSprite.setScale(0.25f, 0.25f);
+
+
     while (window->isOpen()) {
 
         while (window->pollEvent(event)) {
@@ -128,8 +147,15 @@ void Game::firstWindow() {
                 if (playButtonSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
 
                     window->close();
-                    secondWindow();
+                    registerWindow();
                 }
+
+                if (rankingSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
+
+                    window->close();
+                    rankingWindow();
+                }
+
             }
         }
 
@@ -137,6 +163,7 @@ void Game::firstWindow() {
         window->draw(backgroundSprite);
         window->draw(playButtonSprite);
         window->draw(titleSprite);
+        window->draw(rankingSprite);
         window->display();
     }
 }
@@ -222,6 +249,15 @@ void Game::secondWindow() {
     challengeProgressText.setString(getObjectiveProgress(board));
     challengeProgressText.setPosition(550, 505);
 
+    Texture levelBottonTexture;
+    if (!levelBottonTexture.loadFromFile("assets/levelBotton.png")) {
+        cout << "ERROR AL CARGAR EL BOTON DE NIVELES" << endl;
+    }
+    Sprite levelBottonSprite;
+    levelBottonSprite.setTexture(levelBottonTexture);
+    levelBottonSprite.setPosition(-15, 470);
+    levelBottonSprite.setScale(0.3f, 0.3f);
+
     int firstRow = -1;
     int firstCol = -1;
     bool hasFirst = false;
@@ -241,7 +277,7 @@ void Game::secondWindow() {
             }
             if (board.getMovesLeft() <= 0) {
 
-                const Level& lvl = levels[currentLevel];
+                Level& lvl = levels[currentLevel];
                 bool levelCompleted = false;
 
                 switch (lvl.objectiveType) {
@@ -264,12 +300,25 @@ void Game::secondWindow() {
                     break;
                 }
 
+                if (levelCompleted && !currentPlayerName.empty()) {
+
+                    ranking.addScoreForPlayer(currentPlayerName, board.getScore());
+                    ranking.sortDescendingByScore();
+                    ranking.saveToFile();
+                }
+
                 window->close();
                 thirdWindow(board.getScore(), levelCompleted);
             }
 
+
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
                 Vector2i mousePosition = Mouse::getPosition(*window);
+
+                if(levelBottonSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
+                    levelsWindow();
+                }
+
                 int selectedColumn = mousePosition.x / 64;
                 int selectedRow = mousePosition.y / 64;
 
@@ -299,7 +348,6 @@ void Game::secondWindow() {
                                 otherGemRow = selectedRow;
                                 otherGemCol = selectedColumn;
                                 otherGemType = 6;
-
                             }
                             else if (isBombAndNormal) {
 
@@ -328,7 +376,7 @@ void Game::secondWindow() {
 
                             Clock clock;
                             while (board.updateFallingGems(clock.restart().asSeconds())) {
-                                animateAndRedraw(board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+                                animateAndRedraw(levelBottonSprite,board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
                             }
 
                             if (bombSwapPending) {
@@ -337,11 +385,12 @@ void Game::secondWindow() {
                                 bombSwapPending = false;
 
                                 board.decrementMoves();
-                                animateAndRedraw(board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+                                animateAndRedraw(levelBottonSprite, board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+
                                 cout << "LA BOMBA HA EXPLOTADO!" << endl;
 
                                 while (board.processMatches(true)) {
-                                    animateAndRedraw(board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+                                    animateAndRedraw(levelBottonSprite, board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
                                     cout << "SE DETECTO MATCH" << endl;
                                 }
                             }
@@ -349,14 +398,14 @@ void Game::secondWindow() {
                             else if (board.hasMatchAt(firstRow, firstCol) || board.hasMatchAt(selectedRow, selectedColumn)) {
                                 board.decrementMoves();
                                 while (board.processMatches(true)) {
-                                    animateAndRedraw(board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+                                    animateAndRedraw(levelBottonSprite, board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
                                     cout << "SE DETECTO MATCH" << endl;
                                 }
                             }
                             else {
 
                                 board.swapGems(firstRow, firstCol, selectedRow, selectedColumn);
-                                animateAndRedraw(board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
+                                animateAndRedraw(levelBottonSprite, board, scoreIconSprite, scoreText, movesText, levelBoxSprite, levelText, challengeDescription, challengeProgressText, challengeBoxSprite);
                                 cout << "NO SE DETECTO MATCH" << endl;
                             }
 
@@ -377,6 +426,7 @@ void Game::secondWindow() {
         window->clear();
         window->draw(backgroundSprite);
         board.drawInBoard(*window);
+        window->draw(levelBottonSprite);
         window->draw(scoreIconSprite);
         window->draw(scoreText);
         window->draw(movesText);
@@ -507,5 +557,269 @@ void Game::thirdWindow(int finalScore, bool levelCompleted)
         }
         window->draw(exitSprite);
         window->display();
+    }
+}
+
+void Game::rankingWindow()
+{
+    window = new RenderWindow(VideoMode(800, 600), "GEMAS ENCANTADAS - RANKING");
+
+    if (!backgroundTexture.loadFromFile("assets/rankingBackground.png")) {
+        cout << "ERROR AL CARGAR LA IMAGEN DEL FONDO" << endl;
+    }
+    backgroundSprite.setTexture(backgroundTexture);
+
+    Font font;
+    if (!font.loadFromFile("assets/japaneseFont.ttf")) {
+        cout << "ERROR AL CARGAR LA FUENTE" << endl;
+    }
+
+    RectangleShape rankingBox(Vector2f(450.0f, 350.0f));
+    rankingBox.setPosition(175, 160);
+    rankingBox.setFillColor(Color(40, 40, 40));
+    rankingBox.setOutlineColor(Color(218, 165, 32));
+    rankingBox.setOutlineThickness(5.0f);
+
+    Texture titleTexture;
+    Sprite titleSprite;
+    if (!titleTexture.loadFromFile("assets/rankingTitle.png")){
+        cout<<"ERROR AL CARGAR LA IMAGEN DE RANKING"<< endl;
+    }
+    titleSprite.setTexture(titleTexture);
+    titleSprite.setPosition(168, -100);
+    titleSprite.setScale(1,1);
+
+    Texture backTexture;
+    Sprite backSprite;
+    if (!backTexture.loadFromFile("assets/backBotton.png")) {
+        cout << "ERROR AL CARGAR EL BOTON DE SALIDA" << endl;
+    }
+    backSprite.setTexture(backTexture);
+    backSprite.setScale(0.2f, 0.2f);
+    backSprite.setPosition(10.f, 10.f);
+
+    string rankingText = ranking.showRanking();
+    if (rankingText.empty()) {
+        rankingText = "Sin jugadores";
+    }
+    Text players(rankingText, font,26);
+    players.setFillColor(Color(218, 165, 32));
+    players.setPosition(200.f, 180.f);
+
+    while (window->isOpen()) {
+
+        while (window->pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                window->close();
+            }
+            if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
+                Vector2i mousePosition = Mouse::getPosition(*window);
+                if (backSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
+                    window->close();
+                    firstWindow();
+                    return;
+                }
+            }
+        }
+        window->clear();
+        window->draw(backgroundSprite);
+        window->draw(rankingBox);
+        window->draw(players);
+        window->draw(backSprite);
+        window->draw(titleSprite);
+        window->display();
+    }
+}
+
+void Game::registerWindow()
+{
+    window = new RenderWindow(VideoMode(750, 550), "GEMAS ENCANTADAS - REGISTRA JUGADOR");
+
+    if (!backgroundTexture.loadFromFile("assets/registerBackground.png")) {
+        cout << "ERROR AL CARGAR LA IMAGEN DE EL FONDO" << endl;
+    }
+    backgroundSprite.setTexture(backgroundTexture);
+
+    Font font;
+    if (!font.loadFromFile("assets/japaneseFont.ttf")) {
+        cout << "ERROR AL CARGAR LA FUENTE" << endl;
+    }
+
+    RectangleShape promptBox(Vector2f(400.0f, 50.0f));
+    promptBox.setPosition(175, 110);
+    promptBox.setFillColor(Color(40, 40, 40));
+    promptBox.setOutlineColor(Color(218, 165, 32));
+    promptBox.setOutlineThickness(5.0f);
+
+    Text promptText;
+    promptText.setFont(font);
+    promptText.setCharacterSize(24);
+    promptText.setFillColor(Color(218, 165, 32));
+    promptText.setPosition(190, 120);
+    promptText.setString("Escribe tu nombre de jugador:");
+
+    Texture playerTexture;
+    if (!playerTexture.loadFromFile("assets/playerShape.png")) {
+        cout << "ERROR AL CARGAR LA SILUETA DEL JUGADOR" << endl;
+    }
+    Sprite playerSprite;
+    playerSprite.setTexture(playerTexture);
+    playerSprite.setPosition(250, 150);
+    playerSprite.setScale(0.5f, 0.5f);
+
+    Text inputText;
+    inputText.setFont(font);
+    inputText.setCharacterSize(28);
+    inputText.setFillColor(Color::White);
+    inputText.setPosition(130, 395);
+
+    RectangleShape inputBox(Vector2f(500.0f, 50.0f));
+    inputBox.setPosition(120, 390);
+    inputBox.setFillColor(Color(40, 40, 40));
+    inputBox.setOutlineColor(Color(218, 165, 32));
+    inputBox.setOutlineThickness(5.0f);
+
+    Texture backTexture;
+    Sprite backSprite;
+    if (!backTexture.loadFromFile("assets/backBotton.png")) {
+        cout << "ERROR AL CARGAR EL BOTON DE SALIDA" << endl;
+    }
+    backSprite.setTexture(backTexture);
+    backSprite.setScale(0.2f, 0.2f);
+    backSprite.setPosition(0, 0);
+
+    Clock cursorClock;
+    bool cursorVisible = true;
+    float blinkInterval = 0.5f;
+
+    String nameInput;
+    int maxNameLength = 16;
+
+    while (window->isOpen()) {
+
+        Event event;
+        while (window->pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                window->close();
+            }
+            else if (event.type == Event::TextEntered) {
+               
+                if (event.text.unicode == 8) {
+                    if (nameInput.getSize() > 0) {
+                        nameInput.erase(nameInput.getSize() - 1, 1);
+                    }
+                }
+                else {
+                    if (nameInput.getSize() < maxNameLength) {
+                        nameInput += event.text.unicode;
+                    }
+                }
+                cursorVisible = true;
+                cursorClock.restart();
+            }
+            else if (event.type == Event::KeyPressed) {
+                if (event.key.code == Keyboard::Enter) {
+
+                    string playerName = "";
+
+                    if (nameInput.getSize() == 0) {
+                        playerName = "Anonimo";
+                    }
+                    else{
+                        playerName = nameInput.toAnsiString();
+                    }
+
+                    Player newPlayer(playerName, 0);
+                    currentPlayerName = playerName;
+                    ranking.addPlayer(newPlayer);
+                    ranking.saveToFile();
+                    secondWindow();
+                    window->close();
+                }
+            }
+            else if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
+                Vector2i mousePosition = Mouse::getPosition(*window);
+                if (backSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
+                    window->close();
+                    firstWindow();
+                }
+            }
+        }
+
+        if (cursorClock.getElapsedTime().asSeconds() >= blinkInterval) {
+            cursorVisible = !cursorVisible;
+            cursorClock.restart();
+        }
+
+        String display = nameInput;
+        if (cursorVisible) {
+            display += "|";
+        }
+
+        inputText.setString(display);
+        window->clear();
+        window->draw(backgroundSprite);
+        window->draw(backSprite);
+        window->draw(playerSprite);
+        window->draw(promptBox);
+        window->draw(inputBox);
+        window->draw(promptText);
+        window->draw(inputText);
+        window->display();
+    }
+}
+
+void Game::levelsWindow()
+{
+    RenderWindow levelWindow(VideoMode(800, 600), "GEMAS ENCANTADAS - NIVELES");
+
+    string backgroundPath = "";
+
+    if (currentLevel == 0) {
+        backgroundPath = "assets/level1.png";
+    }
+    else if (currentLevel == 1) {
+        backgroundPath = "assets/level2.png";
+    }
+    else if (currentLevel == 2) {
+        backgroundPath = "assets/level3.png";
+    }
+   
+    Texture levelBackground;
+    if (!levelBackground.loadFromFile(backgroundPath)) {
+        cout << "ERROR AL CARGAR LA IMAGEN DE EL FONDO" << endl;
+    }
+    Sprite levelBackgroundSprite;
+    levelBackgroundSprite.setTexture(levelBackground);
+
+    Texture backTexture;
+    Sprite backSprite;
+    if (!backTexture.loadFromFile("assets/backBotton.png")) {
+        cout << "ERROR AL CARGAR EL BOTON DE SALIDA" << endl;
+    }
+    backSprite.setTexture(backTexture);
+    backSprite.setScale(0.2f, 0.2f);
+    backSprite.setPosition(10.f, 10.f);
+
+    while (levelWindow.isOpen()) {
+        while (levelWindow.pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                levelWindow.close();
+            }
+
+            if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
+                Vector2i mousePosition = Mouse::getPosition(levelWindow);
+
+                if (backSprite.getGlobalBounds().contains(mousePosition.x, mousePosition.y)) {
+                    levelWindow.close(); 
+                    
+                }
+            }
+        }
+
+        levelWindow.clear();
+        levelWindow.draw(levelBackgroundSprite);
+        levelWindow.draw(backSprite);
+        levelWindow.display();
     }
 }

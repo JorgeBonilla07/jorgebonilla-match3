@@ -147,6 +147,8 @@
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NormalGem.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Ranking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
@@ -156,6 +158,11 @@
     <ClInclude Include="IceGem.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="NormalGem.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Ranking.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

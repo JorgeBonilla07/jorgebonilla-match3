@@ -1,4 +1,5 @@
 #include "Gem.h"
+#include <iostream>
 using namespace std;
 
 Texture Gem::gemTextures[6];
@@ -12,6 +13,3 @@ void Gem::loadTextures() {
     gemTextures[4].loadFromFile("assets/goldenGem.png");
     gemTextures[5].loadFromFile("assets/bombGem.png");
 }
-
-
-

@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-Board::Board() {
+Board::Board()   {
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -82,6 +82,7 @@ void Board::drawInBoard(RenderWindow& window) {
 }
 
 void Board::swapGems(int firstRow, int firstCol, int secondRow, int secondCol) {
+
     if (!gems[firstRow][firstCol] || !gems[secondRow][secondCol]) {
         return;
     }
@@ -252,12 +253,12 @@ bool Board::processMatches(bool hitIce) {
 
     if (foundMatch) {
 
-        const int gemToCount = 0;
-        int gemCount = countMarkedColor(gemsToRemove, gemToCount);
+        int gemTypeToCount = 0;
+        int gemCount = countMarkedColor(gemsToRemove, gemTypeToCount);
+
         if (gemCount > 0) {
             removedGemsCount += gemCount;
         }
-
         if (hitIce) {
             hitIceIfAdjacent(gemsToRemove);
         }
@@ -336,6 +337,8 @@ int Board::countMarkedColor(const bool gemsToRemove[8][8], int gemType)
 void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
 
     try {
+
+        // Se usa cuando llamamos al metodo sin parametros, como en 
         if (!GemsToRemove && !bombToCreate) {
             bool tempRemove[8][8] = { false };
             bool tempBombs[8][8] = { false };
@@ -343,6 +346,7 @@ void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
             return;
         }
 
+        // borra todas las gemas de GemsToRemove
         for (int row = 0; row < 8; row++) {
             for (int column = 0; column < 8; column++) {
                 if (GemsToRemove[row][column] && gems[row][column]) {
@@ -356,13 +360,16 @@ void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
             }
         }
 
+        // Se crean las gemas bomba 
         for (int column = 0; column < 8; column++) {
             for (int row = 0; row < 8; row++) {
                 if (bombToCreate && bombToCreate[row][column] && GemsToRemove[row][column]) {
                     int spawnRow = 0;
+
                     while (spawnRow < 8 && gems[spawnRow][column]) {
                         spawnRow++;
                     }
+
                     if (spawnRow < 8) {
                         createBombGem(spawnRow, column, row);
                     }
@@ -375,6 +382,7 @@ void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
                 }
             }
         }
+
         for (int column = 0; column < 8; column++) {
             int writeRow = 7;
 
@@ -394,10 +402,12 @@ void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
                     }
                     writeRow--;
                 }
+                // El bloque de hielo no deja caer gemas
                 else if (gems[readRow][column] && gems[readRow][column]->getGemType() < 0) {
                     writeRow = readRow - 1;
                 }
             }
+
             for (int row = writeRow; row >= 0; row--) {
 
                 if (!gems[row][column]) {
@@ -410,14 +420,16 @@ void Board::refillBoard(bool GemsToRemove[8][8], bool bombToCreate[8][8]) {
             }
         }
 
+        //Luego de todo el proceso, se asegura la posicion logica 
         for (int row = 0; row < 8; row++) {
             for (int column = 0; column < 8; column++) {
-
-                if (gems[row][column])
+                if (gems[row][column]) {
                     gems[row][column]->setPosition(column * tileSize, row * tileSize);
+                }
             }
         }
     }
+
     catch (...) {
         for (int row = 0; row < 8; ++row) {
             for (int col = 0; col < 8; ++col) {
@@ -506,9 +518,10 @@ void Board::createBombGem(int spawnRow, int column, int destRow) {
     }
 
     gems[spawnRow][column] = new BombGem();
-
+    
     if (spawnRow == destRow) {
         gems[spawnRow][column]->setPosition(column * tileSize, destRow * tileSize);
+        //////////////////////////////////////
     }
     else {
         gems[spawnRow][column]->setPosition(column * tileSize, -tileSize);
@@ -540,6 +553,7 @@ int Board::getGemTypeAt(int row, int col) const {
     return gems[row][col]->getGemType();
 }
 
+//Metodo para limpiar el tablero antes de la primera jugada
 void Board::clearBombGems() {
     bool anyBomb = false;
 
