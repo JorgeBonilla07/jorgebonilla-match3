@@ -40,7 +40,7 @@ Creado en *Visual Studio 2022*.
 ### 🔹 Opción 2 — Instalar manualmente
 1. Descarga el repositorio como `.zip` desde GitHub. 
 
-![Botón "Code" para clonar el repositorio desde GitHub](Instrucciones/descargarZip.png)
+![Botón "Code" para clonar el repositorio desde GitHub](Instrucciones/descagarZip.png)
 
 2. Extrae los archivos.  
 3. Abre el archivo `PROYECTO_JORGE_BONILLA.sln` con Visual Studio 2022.  
